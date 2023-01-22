@@ -10,7 +10,7 @@ openai.api_key = os.getenv("OPENAI_API_KEY")
 
 
 
-@app.route('/getprompt', methods=['GET'])
+@app.route('/getprompt/', methods=['GET'])
 def getPrompt():
     link = request.args.get("link", None)
     response = {}
