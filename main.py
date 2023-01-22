@@ -1,11 +1,8 @@
-
-
 import replicate
-from fastapi import FastAPI
-import PIL.Image
+from flask import Flask, request, jsonify
+app = Flask(__name__)
 import os
 import openai
-app = FastAPI()
 model = replicate.models.get("pharmapsychotic/clip-interrogator")
 version = model.versions.get("a4a8bafd6089e1716b06057c42b19378250d008b80fe87caa5cd36d40c1eda90")
 
@@ -13,12 +10,13 @@ openai.api_key = os.getenv("OPENAI_API_KEY")
 
 
 
-@app.get("/get-prompt")
-def getPrompt(link = None):
-    print(os.getenv("OPENAI_API_KEY"))
+@app.route('/getprompt/', methods=['GET'])
+def getPrompt():
+    link = request.args.get("link", None)
+    response = {}
     if link is None:
-        text = 'No link'
-        return text
+        response["ERROR"] = "The name can't be numeric. Please send a string."
+        return jsonify(response)
 
     else:
         inputs = {
@@ -35,11 +33,20 @@ def getPrompt(link = None):
         output = version.predict(**inputs)
         output = output.replace('kanye west', '')
         print(output)
-        response = openai.Image.create_edit(
+        response["DATA"] = openai.Image.create_edit(
             image=open("./resources/defautlers.png", 'rb'),
             mask=open("./resources/torso_masker.png", 'rb'),
             prompt="A man wearing " + output,
             n=2,
             size="1024x1024"
         )
-        return response
+        return jsonify(response)
+
+@app.route('/')
+def index():
+    # A welcome message to test our server
+    return "<h1>Welcome to our style-me-api!</h1>"
+
+if __name__ == '__main__':
+    # Threaded option to enable multiple instances for multiple user access support
+    app.run(threaded=True, port=5000)
